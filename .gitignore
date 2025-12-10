@@ -1,0 +1,19 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+
+# Runtime / generated data
+data/
+exports/
+uploads/
+
+# OS junk
+.DS_Store
+Thumbs.db
+

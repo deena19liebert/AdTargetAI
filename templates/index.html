@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AdTargetAI - AI Marketing Campaign Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div class="container mx-auto px-4 py-8">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">AdTargetAI</h1>
+      <p class="text-lg text-gray-600">Generate AI-powered marketing campaigns with Mistral</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+      <form id="campaignForm" class="space-y-6" aria-label="Campaign form" method="post" onsubmit="return false;">
+        <!-- Product name + category -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Product Name *</label>
+            <input id="product_name" name="product_name" type="text" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Category *</label>
+            <input id="category" name="category" type="text" required placeholder="e.g., Skincare, Electronics"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Product Description *</label>
+          <textarea id="product_description" name="product_description" required rows="4"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            placeholder="Describe features and benefits..."></textarea>
+        </div>
+
+        <!-- Landing page + Image upload -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Landing Page URL *</label>
+            <input id="landing_page" name="landing_page" type="url" required placeholder="https://example.com/product"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Primary Image *</label>
+            <input id="imageFile" name="image_file" type="file" accept="image/*"
+              class="mt-1 block w-full rounded-md" aria-describedby="imageHelp" />
+            <p id="imageHelp" class="text-xs text-gray-500 mt-1">Recommended: 1200×628 (JPEG/PNG). We'll upload this to server and to Facebook when creating real ads.</p>
+
+            <!-- Preview -->
+            <div id="localPreviewWrap" class="mt-3 hidden">
+              <div class="text-xs text-gray-500 mb-1">Local preview</div>
+              <img id="localPreview" src="" alt="local preview" class="w-full rounded border object-cover h-40" />
+            </div>
+            <div id="uploadedPreviewWrap" class="mt-3 hidden">
+              <div class="text-xs text-gray-500 mb-1">Uploaded image (server)</div>
+              <img id="uploadedPreview" src="" alt="uploaded preview" class="w-full rounded border object-cover h-40" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Price / Budget / Days -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Price Range *</label>
+            <select id="price_range" name="price_range" required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+              <option value="">Select Price Range...</option>
+              <option value="budget">Budget</option>
+              <option value="mid-range">Mid-Range</option>
+              <option value="premium">Premium</option>
+              <option value="luxury">Luxury</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Daily Budget ($) *</label>
+            <input id="daily_budget" name="daily_budget" type="number" required min="1" step="0.01"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="e.g., 50.00" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Campaign Days *</label>
+            <input id="campaign_days" name="campaign_days" type="number" required min="1" max="365"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="e.g., 30" />
+          </div>
+        </div>
+
+        <!-- Dates, objective & ad account -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Start Date</label>
+            <input id="start_date" name="start_date" type="date"
+              class="mt-1 block w-full rounded-md border-gray-300" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">End Date</label>
+            <input id="end_date" name="end_date" type="date"
+              class="mt-1 block w-full rounded-md border-gray-300" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Campaign Objective *</label>
+            <select id="objective" name="objective" required
+              class="mt-1 block w-full rounded-md border-gray-300">
+              <option value="LINK_CLICKS">Traffic (Link Clicks)</option>
+              <option value="CONVERSIONS">Conversions</option>
+              <option value="BRAND_AWARENESS">Brand Awareness</option>
+              <option value="ENGAGEMENT">Engagement</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Platforms -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Platforms *</label>
+          <div id="platformsError" class="text-red-600 text-sm mb-2 hidden">Please select at least one platform</div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="facebook" class="rounded border-gray-300 text-blue-600" checked /><span class="ml-2">Facebook</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="instagram" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">Instagram</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="tiktok" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">TikTok</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="youtube" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">YouTube</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="linkedin" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">LinkedIn</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="x" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">X (Twitter)</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="google" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">Google Ads</span></label>
+            <label class="inline-flex items-center"><input type="checkbox" name="platforms" value="pinterest" class="rounded border-gray-300 text-blue-600" /><span class="ml-2">Pinterest</span></label>
+          </div>
+        </div>
+
+        <!-- CTA & Ad account -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Call to Action *</label>
+            <input id="call_to_action" name="call_to_action" type="text" required placeholder="e.g., Shop Now"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Ad Account (optional)</label>
+            <input id="ad_account" name="ad_account" type="text" placeholder="act_1234567890"
+              class="mt-1 block w-full rounded-md border-gray-300" />
+            <p class="text-xs text-gray-500 mt-1">Use your ad account id if you want to create real ads in a specific account.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2 items-center">
+          <button id="submitBtn" type="submit"
+            class="flex-1 bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 disabled:bg-blue-400 disabled:cursor-not-allowed">
+            Generate AI Campaign
+          </button>
+          <button id="saveDraftBtn" type="button" class="px-4 py-3 rounded-md border" title="Save draft (client-side)">Save Draft</button>
+        </div>
+      </form>
+
+      <!-- Loading -->
+      <div id="loading" class="mt-8 hidden text-center" role="status" aria-live="polite">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-gray-600 text-lg">Generating your AI-powered campaign...</p>
+        <p class="text-gray-500 text-sm">This may take 10–30 seconds</p>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="mt-8 hidden" aria-live="polite"></div>
+
+      <!-- Dynamic Facebook Export container (populated only after generation) -->
+      <div id="facebookExport" class="mt-8 hidden"></div>
+    </main>
+  </div>
+
+  <!-- Confirmation modal for creating real ads -->
+  <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full">
+      <h3 class="text-lg font-semibold mb-2">Confirm Real Ad Creation</h3>
+      <p class="text-sm text-gray-700 mb-4">This will create live ads in your connected ad accounts. This action may spend real money.</p>
+      <label class="block text-sm text-gray-600 mb-2">Admin API Key</label>
+      <input id="adminKeyInput" type="password" class="w-full p-2 border rounded mb-4" placeholder="Enter admin key" />
+      <div class="flex justify-end gap-2">
+        <button id="cancelModal" class="px-4 py-2 rounded border">Cancel</button>
+        <button id="confirmModalBtn" class="px-4 py-2 rounded bg-green-600 text-white">Confirm & Create Ads</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------
+    // Helpers
+    // -------------------------
+    function el(id) { return document.getElementById(id); }
+
+    function showError(msg) {
+      const resultsDiv = el('results');
+      resultsDiv.classList.remove('hidden');
+      resultsDiv.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-6"><div class="flex items-center"><div class="text-2xl mr-3">❌</div><div><h3 class="text-lg font-semibold text-red-800">Error</h3><p class="text-red-600 mt-1">${escapeHtml(msg)}</p></div></div></div>`;
+      resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showSuccess(html) {
+      const resultsDiv = el('results');
+      resultsDiv.classList.remove('hidden');
+      resultsDiv.innerHTML = html;
+      resultsDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/[&<>"']/g, (m) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    async function uploadImageFile(file) {
+      // Uploads file to server /api/upload-image
+      if (!file) return null;
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: fd
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=>null);
+        throw new Error(t || 'Image upload failed');
+      }
+      const json = await res.json();
+      // convert relative path to absolute if needed
+      if (json.url && !json.url.startsWith('http')) json.url = window.location.origin.replace(/\/$/, '') + json.url;
+      return json;
+    }
+
+    // -------------------------
+    // Local image preview + upload binding
+    // -------------------------
+    el('imageFile').addEventListener('change', (ev) => {
+      const f = ev.target.files[0];
+      if (!f) return;
+      const localPreview = el('localPreview');
+      const localWrap = el('localPreviewWrap');
+      localPreview.src = URL.createObjectURL(f);
+      localWrap.classList.remove('hidden');
+    });
+
+    // -------------------------
+    // Form Submission
+    // -------------------------
+    document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      el('platformsError').classList.add('hidden');
+      el('results').classList.add('hidden');
+      el('facebookExport').classList.add('hidden');
+
+      const submitBtn = el('submitBtn');
+      const loadingDiv = el('loading');
+
+      // Basic client-side validation
+      const platforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked')).map(i=>i.value);
+      if (platforms.length === 0) {
+        el('platformsError').classList.remove('hidden');
+        return;
+      }
+
+      const product_name = el('product_name').value.trim();
+      const product_description = el('product_description').value.trim();
+      const category = el('category').value.trim();
+      const landing_page = el('landing_page').value.trim();
+      const daily_budget = parseFloat(el('daily_budget').value);
+      const campaign_days = parseInt(el('campaign_days').value);
+      const call_to_action = el('call_to_action').value.trim();
+      const objective = el('objective').value;
+      const price_range = el('price_range').value;
+      const ad_account = el('ad_account').value.trim() || null;
+      const start_date = el('start_date').value || null;
+      const end_date = el('end_date').value || null;
+
+      if (!product_name || !product_description || !category || !landing_page || !daily_budget || !campaign_days || !call_to_action) {
+        showError('Please fill required fields.');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Generating...';
+      loadingDiv.classList.remove('hidden');
+
+      // Upload image first (if provided)
+      let imageInfo = null;
+      const imageFile = el('imageFile').files[0];
+      try {
+        if (imageFile) {
+          imageInfo = await uploadImageFile(imageFile);
+          if (imageInfo && imageInfo.url) {
+            el('uploadedPreview').src = imageInfo.url;
+            el('uploadedPreviewWrap').classList.remove('hidden');
+          }
+        }
+      } catch (err) {
+        loadingDiv.classList.add('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate AI Campaign';
+        showError('Image upload failed: ' + (err.message || err));
+        return;
+      }
+
+      const payload = {
+        product_name,
+        product_description,
+        category,
+        landing_page,
+        image_url: imageInfo ? imageInfo.url : null,
+        image_hash: imageInfo ? imageInfo.image_hash || null : null,
+        price_range,
+        platforms,
+        target_location: ['US'],
+        daily_budget,
+        total_budget: parseFloat((daily_budget * campaign_days).toFixed(2)),
+        campaign_days,
+        call_to_action,
+        objective,
+        ad_account,
+        start_time: start_date ? new Date(start_date).toISOString() : null,
+        end_time: end_date ? new Date(end_date).toISOString() : null
+      };
+
+      try {
+        const res = await fetch('/api/generate-campaign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const j = await res.json().catch(()=>({ status: 'error', message: 'Invalid JSON response' }));
+
+        if (res.ok && j.status === 'success') {
+          displayResults(j.data);
+          calculateReach(j.data);
+          enableExportUI(j.data.campaign_id);
+        } else {
+          const msg = j.detail || j.message || j.error || JSON.stringify(j);
+          showError('Generation failed: ' + msg);
+        }
+      } catch (err) {
+        showError('Network error: ' + (err.message || err));
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Generate AI Campaign';
+        loadingDiv.classList.add('hidden');
+      }
+    });
+
+    // Save draft (client-only quick feature)
+    el('saveDraftBtn').addEventListener('click', () => {
+      const data = {
+        product_name: el('product_name').value,
+        product_description: el('product_description').value,
+        category: el('category').value,
+        landing_page: el('landing_page').value,
+        price_range: el('price_range').value,
+        daily_budget: el('daily_budget').value,
+        campaign_days: el('campaign_days').value,
+        objective: el('objective').value,
+        call_to_action: el('call_to_action').value
+      };
+      localStorage.setItem('adtargetai_draft', JSON.stringify(data));
+      alert('Draft saved locally.');
+    });
+
+    // Load draft on page load
+    window.addEventListener('load', () => {
+      try {
+        const raw = localStorage.getItem('adtargetai_draft');
+        if (raw) {
+          const d = JSON.parse(raw);
+          if (d.product_name) el('product_name').value = d.product_name;
+          if (d.product_description) el('product_description').value = d.product_description;
+          if (d.category) el('category').value = d.category;
+          if (d.landing_page) el('landing_page').value = d.landing_page;
+          if (d.price_range) el('price_range').value = d.price_range;
+          if (d.daily_budget) el('daily_budget').value = d.daily_budget;
+          if (d.campaign_days) el('campaign_days').value = d.campaign_days;
+          if (d.objective) el('objective').value = d.objective;
+          if (d.call_to_action) el('call_to_action').value = d.call_to_action;
+        }
+      } catch (e) { /* ignore */ }
+    });
+
+    function generateHashtags(audience, strategy, maxTags = 8) {
+  const interests = (audience.interests || []).slice(0, 10)
+    .map(s => s.toLowerCase().replace(/[\s+\/,]+/g,'_').replace(/[^\w_]/g,''));
+  const copy = (strategy.content_strategy?.key_messaging || []).join(' ');
+  const keywords = (copy.match(/\b[a-zA-Z]{4,}\b/g) || []).slice(0, 12)
+                   .map(w => w.toLowerCase().replace(/[^\w]/g,''));
+  // prefer interests first, then keywords
+  const combined = [...new Set([...interests, ...keywords])].filter(Boolean);
+  const cleaned = combined.map(t => t.startsWith('#') ? t.replace('#','') : t).slice(0, maxTags);
+  return cleaned.map(t => '#' + t);
+}
+
+async function calculateReach(campaign) {
+  const reachValueEl = document.getElementById("reachValue");
+  const reachEstimateContainerId = "reachEstimate";
+  try {
+    reachValueEl.innerText = "Calculating...";
+    const audience = campaign.audience_insights || {};
+    const payload = {
+      geo_locations: { countries: campaign.campaign_input?.target_location || ["US"] },
+      age_min: audience.age_min,
+      age_max: audience.age_max,
+      interests: (audience.interests || []).slice(0,5).map(i => ({ id: i, name: i }))
+    };
+
+    const res = await fetch('/api/reach-estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const j = await res.json().catch(()=>({ estimated_reach: "50K–200K (invalid JSON)", raw: null }));
+    // If FB returned a clear estimate object, show it. Otherwise simulate.
+    const raw = j.raw || j;
+    let estimate = j.estimated_reach || (raw && (raw.estimate_dau || raw.users)) || null;
+    let source = 'facebook';
+
+    if (!estimate || typeof estimate === 'string' && estimate.toLowerCase().includes('fallback')) {
+      // Simulate a realistic reach using audience size heuristics
+      estimate = simulateReach(audience);
+      source = 'simulated';
+    }
+
+    // Render a richer card (instead of only writing text)
+    showReachDetails(estimate, source, raw);
+  } catch (err) {
+    // network error -> simulate, but show error in toggle
+    const audience = campaign.audience_insights || {};
+    const sim = simulateReach(audience);
+    showReachDetails(sim, 'simulated', { error: String(err) });
+  }
+}
+
+function simulateReach(audience) {
+  // Heuristic: base by country population, adjust by age span & interest count
+  const countryFactor = 1_000_000; // convenience scaling for demo
+  const ageSpan = Math.max(10, (audience.age_max || 45) - (audience.age_min || 18));
+  const interests = Math.max(1, (audience.interests || []).length);
+  // produce a plausible number (e.g., "75K", "1.2M")
+  const rawEstimate = Math.round(countryFactor * (ageSpan / 100) * Math.min(2, interests / 2));
+  if (rawEstimate >= 1_000_000) return `${(rawEstimate/1_000_000).toFixed(1)}M (simulated)`;
+  if (rawEstimate >= 1000) return `${Math.round(rawEstimate/1000)}K (simulated)`;
+  return `${rawEstimate} (simulated)`;
+}
+
+
+function showReachDetails(estimate, source, raw) {
+  // Ensure target container exists in your generated results HTML: id="reachEstimate"
+  const elWrap = document.getElementById("reachEstimate");
+  if (!elWrap) return; // safety
+  elWrap.innerHTML = `
+    <div class="bg-white rounded-lg p-4 shadow border">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm text-gray-600">Estimated Reach</div>
+          <div class="text-lg font-semibold text-gray-900 mt-1">${escapeHtml(String(estimate))}</div>
+          <div class="text-xs text-gray-500 mt-1">source: <span class="capitalize">${escapeHtml(source)}</span></div>
+        </div>
+        <div class="text-right">
+          <button id="copyReach" class="px-3 py-1 text-sm border rounded">Copy</button>
+        </div>
+      </div>
+      <div class="mt-3">
+        <button id="toggleRawReach" class="text-xs underline">Show raw response / debug</button>
+        <pre id="rawReach" class="mt-2 p-2 bg-gray-50 rounded text-xs hidden" style="max-height:220px; overflow:auto;">${escapeHtml(JSON.stringify(raw || {}, null, 2))}</pre>
+      </div>
+    </div>
+  `;
+  document.getElementById("copyReach").addEventListener("click", ()=> {
+    navigator.clipboard.writeText(String(estimate)).then(()=> alert("Reach copied to clipboard"));
+  });
+  document.getElementById("toggleRawReach").addEventListener("click", (e)=> {
+    const pr = document.getElementById("rawReach");
+    pr.classList.toggle('hidden');
+  });
+}
+
+
+function generateCaptionVariants(campaign, audience, strategy, num = 3) {
+  const product = campaign.campaign_input?.product_name || campaign.product || '';
+  const ctas = audience.suggested_ctas || [campaign.campaign_input?.call_to_action || 'Shop Now'];
+  const baseMessages = strategy.content_strategy?.key_messaging || [campaign.campaign_strategy?.content_strategy?.key_messaging?.[0] || 'Try now'];
+
+  const templates = [
+    (m, cta, tags) => `${m}\n\n${cta}\n\n${tags}`,
+    (m, cta, tags) => `${product}: ${m}\n\n${cta} — Limited stock.\n${tags}`,
+    (m, cta, tags) => `${m}\nGet it here: ${campaign.campaign_input?.landing_page || ''}\n\n${cta}\n${tags}`
+  ];
+
+  const hashtags = generateHashtags(audience, strategy, 6).join(' ');
+  const variants = [];
+  for (let i=0;i<num;i++){
+    const msg = baseMessages[i % baseMessages.length] || baseMessages[0];
+    const cta = ctas[i % ctas.length];
+    const tpl = templates[i % templates.length];
+    variants.push({ text: tpl(msg, cta, hashtags) });
+  }
+  return variants;
+}
+
+
+
+    // -------------------------
+    // Render results & export UI
+    // -------------------------
+function displayResults(campaign) {
+  const resultsDiv = el('results');
+  const audience = campaign.audience_insights || {};
+  const strategy = campaign.campaign_strategy || {};
+
+  // hashtags and caption variants
+  const hashtags = generateHashtags(audience, strategy, 8);
+  const captionVariants = generateCaptionVariants(campaign, audience, strategy, 3);
+
+  // posting times fallback
+  const posting = audience.ideal_posting_times || { facebook: ['19:00','20:00'], instagram: ['17:00','19:00'] };
+
+  // performance predictions (simulate if missing)
+  const perf = simulatePerformanceIfMissing(strategy.performance_predictions);
+
+  const html = `
+  <div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+    <div class="flex items-center">
+      <div class="text-3xl mr-4">🎉</div>
+      <div>
+        <h3 class="text-xl font-semibold text-green-800">Campaign Generated Successfully!</h3>
+        <p class="text-green-600">ID: ${escapeHtml(campaign.campaign_id)}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white rounded-lg p-6 shadow border">
+      <h4 class="font-semibold mb-3">🎯 Audience</h4>
+      <div class="text-sm text-gray-600">Age</div>
+      <div class="font-medium mb-2">${escapeHtml(String(audience.age_min || ''))} - ${escapeHtml(String(audience.age_max || ''))}</div>
+      <div class="text-sm text-gray-600">Top interests</div>
+      <div class="flex flex-wrap gap-2 mt-2">${(audience.interests||[]).slice(0,6).map(i => `<span class="text-xs px-2 py-1 bg-blue-50 rounded">${escapeHtml(i)}</span>`).join('')}</div>
+      <div class="mt-4 text-sm text-gray-600">Posting times</div>
+      <div class="mt-2 text-xs">${Object.entries(posting).map(([p,t])=>`<div class="capitalize mb-1"><strong>${escapeHtml(p)}:</strong> ${escapeHtml((t||[]).join(', '))}</div>`).join('')}</div>
+    </div>
+
+    <div class="bg-white rounded-lg p-6 shadow border">
+      <h4 class="font-semibold mb-3">📊 Strategy</h4>
+      <div class="text-sm text-gray-600">Primary:</div>
+      <div class="font-medium mb-2">${escapeHtml(strategy.targeting_strategy?.primary_audience || '')}</div>
+      <div class="text-sm text-gray-600">Key messaging</div>
+      <div class="mt-2 text-xs">${(strategy.content_strategy?.key_messaging || []).slice(0,3).map(m=>`<div class="mb-1">${escapeHtml(m)}</div>`).join('')}</div>
+    </div>
+
+    <div class="bg-white rounded-lg p-6 shadow border">
+      <h4 class="font-semibold mb-3">⚡ Predictions</h4>
+      <div class="flex justify-between"><div class="text-sm text-gray-600">Est. CTR</div><div class="font-medium">${escapeHtml(perf.ctr)}</div></div>
+      <div class="flex justify-between mt-2"><div class="text-sm text-gray-600">Est. CPC</div><div class="font-medium">${escapeHtml(perf.cpc)}</div></div>
+      <div class="flex justify-between mt-2"><div class="text-sm text-gray-600">Est. Conv</div><div class="font-medium">${escapeHtml(perf.conv)}</div></div>
+      <div class="mt-3 text-xs text-gray-500">These are estimates for demo purposes based on budget & audience size.</div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg p-6 mb-6 border">
+    <h4 class="font-semibold mb-3">✍️ Caption & Hashtags</h4>
+    <div class="mb-3">
+      <div class="flex gap-2 flex-wrap" id="hashtagChips">
+        ${hashtags.map(h=>`<button class="px-2 py-1 text-xs border rounded bg-gray-100" data-tag="${escapeHtml(h)}">${escapeHtml(h)}</button>`).join('')}
+      </div>
+      <div class="mt-3 flex gap-2">
+        <button id="copyAllTags" class="px-3 py-1 bg-indigo-600 text-white rounded text-xs">Copy all tags</button>
+        <button id="regenerateCaption" class="px-3 py-1 border rounded text-xs">Regenerate captions</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      ${captionVariants.map((v, idx) => `
+        <div class="border rounded p-3">
+          <div class="text-xs text-gray-500 mb-2">Variant ${idx+1}</div>
+          <textarea class="w-full text-sm p-2 border rounded" rows="4" id="captionVar${idx}">${escapeHtml(v.text)}</textarea>
+          <div class="mt-2 flex gap-2">
+            <button class="px-3 py-1 bg-green-600 text-white text-xs copyCaptionBtn" data-idx="${idx}">Copy</button>
+            <button class="px-3 py-1 border text-xs insertCaptionBtn" data-idx="${idx}">Use in ad preview</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div id="postingScheduleWrap" class="mb-6"></div>
+
+  <div id="adPreviewsWrap"></div>
+  `;
+
+  showSuccess(html);
+
+  // bind hashtag chip clicks
+  document.querySelectorAll('#hashtagChips button').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      navigator.clipboard.writeText(btn.dataset.tag).then(()=> alert(`${btn.dataset.tag} copied`));
+    });
+  });
+  document.getElementById('copyAllTags').addEventListener('click', ()=> {
+    navigator.clipboard.writeText(hashtags.join(' ')).then(()=> alert('All hashtags copied'));
+  });
+
+  document.querySelectorAll('.copyCaptionBtn').forEach(b=>{
+    b.addEventListener('click', (ev)=>{
+      const idx = b.dataset.idx;
+      navigator.clipboard.writeText(document.getElementById(`captionVar${idx}`).value).then(()=> alert('Caption copied'));
+    });
+  });
+  document.querySelectorAll('.insertCaptionBtn').forEach(b=>{
+    b.addEventListener('click', (ev)=>{
+      const idx = b.dataset.idx;
+      const text = document.getElementById(`captionVar${idx}`).value;
+      // put text into main generatedCaption area if present
+      const mainTA = document.getElementById('generatedCaption');
+      if (mainTA) mainTA.value = text;
+      // and also update ad preview CTA overlay text
+      const previewCTA = document.querySelectorAll('.ad-preview-cta');
+      previewCTA.forEach(node => node.textContent = (campaign.call_to_action || campaign.campaign_input?.call_to_action || 'Shop Now'));
+      alert('Caption inserted into preview area');
+    });
+  });
+
+  // posting schedule
+  const schedule = buildPostingSchedule(campaign, audience);
+  showPostingSchedule(schedule);
+
+  // ad previews
+  showAdPreviews(campaign);
+}
+
+function showPostingSchedule(schedule) {
+  const wrap = document.getElementById('postingScheduleWrap');
+  if (!wrap) return;
+  if (!schedule || schedule.length === 0) {
+    wrap.innerHTML = '';
+    return;
+  }
+  const rows = schedule.slice(0, 30).map(s => `<tr><td class="p-2 text-sm">${escapeHtml(s.platform)}</td><td class="p-2 text-sm">${escapeHtml(new Date(s.datetime).toLocaleString())}</td></tr>`).join('');
+  wrap.innerHTML = `
+    <div class="bg-white rounded-lg p-4 border mb-4">
+      <div class="flex justify-between items-center">
+        <h4 class="font-semibold">📅 Posting schedule (next ${schedule.length} entries)</h4>
+        <div>
+          <button id="downloadSchedule" class="px-3 py-1 border rounded text-xs">Download CSV</button>
+        </div>
+      </div>
+      <table class="w-full mt-3 border-collapse">
+        <thead><tr><th class="text-left p-2 text-xs text-gray-500">Platform</th><th class="text-left p-2 text-xs text-gray-500">Date & Time</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('downloadSchedule').addEventListener('click', ()=> {
+    const csv = ["platform,datetime", ...schedule.map(s=>`${s.platform},"${s.datetime}"`)].join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'posting_schedule.csv'; a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+
+    function buildPostingSchedule(campaign, audience) {
+  const start = campaign.campaign_input?.start_time ? new Date(campaign.campaign_input.start_time) : new Date();
+  const days = campaign.campaign_input?.campaign_days || campaign.campaign_days || 7;
+  const ideal = audience.ideal_posting_times || { facebook: ['19:00', '20:00'] };
+
+  // produce calendar entries for the next `days` days
+  const schedule = [];
+  for (let d=0; d<days; d++) {
+    const day = new Date(start);
+    day.setDate(start.getDate() + d);
+    for (const [platform, times] of Object.entries(ideal)) {
+      (times || []).slice(0,2).forEach(t => {
+        // t e.g. "19:00"
+        const [hh, mm] = t.split(':').map(Number);
+        const scheduled = new Date(day);
+        scheduled.setHours(hh, mm, 0, 0);
+        schedule.push({ platform, datetime: scheduled.toISOString(), label: `${platform} — ${scheduled.toLocaleString()}` });
+      })
+    }
+  }
+  return schedule.sort((a,b)=>new Date(a.datetime)-new Date(b.datetime));
+}
+
+
+function showAdPreviews(campaign) {
+  const resultsDiv = el('results');
+  const audience = campaign.audience_insights || {};
+  const image = campaign.campaign_input?.image_url || (campaign.campaign_input?.reference_image || '');
+  const imageSrc = image && image.startsWith('http') ? image : (image ? window.location.origin.replace(/\/$/, '') + image : '');
+
+  const previewHtml = `
+    <div class="bg-white rounded-lg p-6 mt-6 border">
+      <h4 class="font-semibold mb-3">Ad Previews (mockups)</h4>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        ${['Facebook Feed','Instagram Post','TikTok-style'].map((title, i) => `
+          <div class="p-3 border rounded flex flex-col items-stretch">
+            <div class="text-sm font-semibold mb-2">${escapeHtml(title)}</div>
+            <div class="w-full rounded overflow-hidden relative" style="background:#f3f4f6;height:220px;">
+              ${imageSrc ? `<img src="${escapeHtml(imageSrc)}" alt="" class="w-full h-full object-cover" onerror="this.closest('.w-full').style.display='none'"/>` : `<div class="flex items-center justify-center h-full text-sm text-gray-500">No image provided</div>`}
+              <div class="absolute left-3 bottom-3">
+                <div class="bg-black bg-opacity-60 text-white px-3 py-1 rounded text-xs">${escapeHtml(campaign.campaign_input?.product_name || '')}</div>
+              </div>
+            </div>
+            <div class="mt-3 grow">
+              <div class="text-xs text-gray-700">${escapeHtml((campaign.campaign_strategy?.content_strategy?.key_messaging||[]).slice(0,1).join(' '))}</div>
+            </div>
+            <div class="mt-3">
+              <button class="ad-preview-cta px-3 py-1 rounded bg-blue-600 text-white text-xs">${escapeHtml(campaign.call_to_action || campaign.campaign_input?.call_to_action || 'Shop Now')}</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  // append without destroying earlier results (so it appears below)
+  resultsDiv.insertAdjacentHTML('beforeend', previewHtml);
+}
+
+function simulatePerformanceIfMissing(predictions) {
+  if (predictions && predictions.estimated_metrics) {
+    return {
+      ctr: predictions.estimated_metrics.ctr || "1.5-2.5%",
+      cpc: predictions.estimated_metrics.cpc || "$0.50-$1.50",
+      conv: predictions.estimated_metrics.conversion_rate || "2-5%"
+    };
+  }
+  // Simple heuristic based on budget
+  return {
+    ctr: "1.2-2.8%",
+    cpc: "$0.50-$1.20",
+    conv: "2-4%"
+  };
+}
+   
+    function simulateReach(audience) {
+  // Heuristic: base by country population, adjust by age span & interest count
+  const countryFactor = 1_000_000; // convenience scaling for demo
+  const ageSpan = Math.max(10, (audience.age_max || 45) - (audience.age_min || 18));
+  const interests = Math.max(1, (audience.interests || []).length);
+  // produce a plausible number (e.g., "75K", "1.2M")
+  const rawEstimate = Math.round(countryFactor * (ageSpan / 100) * Math.min(2, interests / 2));
+  if (rawEstimate >= 1_000_000) return `${(rawEstimate/1_000_000).toFixed(1)}M (simulated)`;
+  if (rawEstimate >= 1000) return `${Math.round(rawEstimate/1000)}K (simulated)`;
+  return `${rawEstimate} (simulated)`;
+}
+
+
+    function enableExportUI(campaignId) {
+      const exportDiv = el('facebookExport');
+      exportDiv.classList.remove('hidden');
+      exportDiv.innerHTML = `
+      <div class="bg-white rounded-lg p-6 shadow border mb-6">
+        <h4 class="font-semibold mb-4">🚀 Facebook Ads Export</h4>
+        <p class="text-gray-600 mb-3">Preview the payload or create real ads (admin key required).</p>
+        <div class="flex gap-3">
+          <button id="previewBtn" class="bg-blue-600 text-white px-4 py-2 rounded">👁️ Preview Format</button>
+          <button id="dryRunBtn" class="bg-indigo-600 text-white px-4 py-2 rounded">📤 Dry-run Export</button>
+          <button id="realRunBtn" class="bg-green-600 text-white px-4 py-2 rounded">📱 Create Real Ads</button>
+        </div>
+        <div id="exportMessage" class="mt-4 hidden p-4 rounded"></div>
+      </div>
+      `;
+
+      el('previewBtn').addEventListener('click', async () => {
+        setExportMessage('Loading preview...', 'info');
+        try {
+          const res = await fetch(`/api/export-formats/${campaignId}`);
+          const j = await res.json().catch(()=>({}));
+          if (res.ok && j.status === 'success') {
+            setExportMessage('Preview loaded', 'success');
+            const payload = j.platform_formats?.facebook || j.platform_formats;
+            const w = window.open('', '_blank');
+            w.document.write(`<pre>${escapeHtml(JSON.stringify(payload, null, 2))}</pre>`);
+          } else {
+            setExportMessage('Preview failed: ' + (j.detail || j.message || JSON.stringify(j)), 'error');
+          }
+        } catch (err) {
+          setExportMessage('Preview error: ' + err.message, 'error');
+        }
+      });
+
+      el('dryRunBtn').addEventListener('click', async () => {
+        setExportMessage('Running dry-run...', 'info');
+        try {
+          const res = await fetch(`/api/export-campaign/${campaignId}`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({platforms: ['facebook'], create_real_ads: false})
+          });
+          const j = await res.json().catch(()=>({}));
+          if (res.ok && j.status === 'success') {
+            setExportMessage('Dry-run succeeded — check browser console for the result', 'success');
+            console.log('dry-run result', j.export_results);
+          } else {
+            setExportMessage('Dry-run failed: ' + (j.detail || j.message || JSON.stringify(j)), 'error');
+          }
+        } catch (err) {
+          setExportMessage('Network error: ' + err.message, 'error');
+        }
+      });
+
+      el('realRunBtn').addEventListener('click', () => {
+        el('confirmModal').classList.remove('hidden');
+      });
+
+      el('cancelModal').addEventListener('click', () => {
+        el('confirmModal').classList.add('hidden');
+      });
+
+      el('confirmModalBtn').addEventListener('click', async () => {
+        const adminKey = el('adminKeyInput').value.trim();
+        if (!adminKey) return alert('Admin key is required to create real ads.');
+        setExportMessage('Creating real ads...', 'info');
+        el('confirmModal').classList.add('hidden');
+
+        try {
+          const res = await fetch(`/api/export-campaign/${campaignId}`, {
+            method: 'POST',
+            headers: {'Content-Type':'application/json', 'X-API-KEY': adminKey},
+            body: JSON.stringify({platforms: ['facebook'], create_real_ads: true})
+          });
+          const j = await res.json().catch(()=>({}));
+          if (res.ok && j.status === 'success') {
+            setExportMessage('Real ads created — check response and Facebook Ads Manager', 'success');
+            console.log('real-run result', j.export_results);
+          } else {
+            setExportMessage('Real-run failed: ' + (j.detail || j.message || JSON.stringify(j)), 'error');
+          }
+        } catch (err) {
+          setExportMessage('Network error: ' + err.message, 'error');
+        } finally {
+          el('adminKeyInput').value = '';
+        }
+      });
+
+      function setExportMessage(text, type) {
+        const out = el('exportMessage');
+        out.classList.remove('hidden');
+        out.innerHTML = escapeHtml(text);
+        out.style.borderLeft = type === 'error' ? '4px solid #ef4444' : (type === 'success' ? '4px solid #16a34a' : '4px solid #2563eb');
+      }
+    }
+
+    // -------------------------
+    // Small helpers for downloads / details
+    // -------------------------
+    async function downloadCampaign(campaignId) {
+      try {
+        const r = await fetch(`/api/campaigns/${campaignId}/download`);
+        if (!r.ok) return alert('Download failed');
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `${campaignId}_campaign.json`; a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) { alert('Download error: '+err.message); }
+    }
+
+    function viewFullDetails(campaignId) { window.open(`/api/campaigns/${campaignId}`, '_blank'); }
+  </script>
+</body>
+</html>

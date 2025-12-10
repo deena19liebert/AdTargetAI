@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "campaign_id": "campaign_testexport_20251021_133022",
+    "export_timestamp": "2025-10-21T13:30:22.608806",
+    "version": "1.0",
+    "status": "ready_for_review"
+  },
+  "campaign_input": {
+    "product_name": "Test Export",
+    "category": "test"
+  },
+  "audience_insights": {
+    "age_min": 25,
+    "age_max": 45,
+    "genders": [
+      "female",
+      "male"
+    ]
+  },
+  "platform_feeds": {
+    "facebook": {
+      "targeting_spec": {
+        "age_min": 25,
+        "age_max": 45
+      },
+      "ad_creative": {
+        "call_to_action": "Test Now"
+      }
+    },
+    "instagram": {
+      "targeting": {
+        "age_range": [
+          25,
+          45
+        ]
+      },
+      "creative": {
+        "call_to_action": "Test Now"
+      }
+    }
+  },
+  "export_summary": {
+    "total_platforms": 2,
+    "platforms_exported": [
+      "facebook",
+      "instagram"
+    ],
+    "estimated_reach": "100K-500K",
+    "recommended_budget_allocation": {
+      "facebook": 52.2,
+      "instagram": 47.8
+    },
+    "export_status": "complete",
+    "next_steps": [
+      "Review generated specifications",
+      "Upload to respective ad platforms",
+      "Set up conversion tracking",
+      "Launch and monitor performance"
+    ]
+  },
+  "validation_results": {
+    "facebook": {
+      "has_targeting": true,
+      "has_creative": true,
+      "has_budget": false,
+      "feed_size": 97,
+      "status": "valid"
+    },
+    "instagram": {
+      "has_targeting": true,
+      "has_creative": true,
+      "has_budget": false,
+      "feed_size": 82,
+      "status": "valid"
+    }
+  }
+}

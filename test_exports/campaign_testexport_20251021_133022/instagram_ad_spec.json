@@ -1,0 +1,13 @@
+{
+  "platform": "instagram",
+  "targeting": {
+    "age_range": [
+      25,
+      45
+    ]
+  },
+  "creative_spec": {
+    "call_to_action": "Test Now"
+  },
+  "placement": {}
+}

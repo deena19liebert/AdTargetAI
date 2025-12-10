@@ -1,0 +1,24 @@
+{
+  "schema_version": "v12.0",
+  "campaign": {
+    "name": "Facebook Campaign",
+    "objective": "OUTCOME_TRAFFIC",
+    "status": "PAUSED"
+  },
+  "adset": {
+    "name": "Targeting AdSet",
+    "daily_budget": 5000,
+    "billing_event": "IMPRESSIONS",
+    "optimization_goal": "LINK_CLICKS",
+    "targeting": {
+      "age_min": 25,
+      "age_max": 45
+    }
+  },
+  "ad": {
+    "name": "Ad Creative",
+    "creative": {
+      "call_to_action": "Test Now"
+    }
+  }
+}
