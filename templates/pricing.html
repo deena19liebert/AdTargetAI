@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdTargetAI - Pricing & Subscriptions</title>
+  
+  <!-- Razorpay Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    .pricing-card {
+      transition: transform 0.2s;
+    }
+    .pricing-card:hover {
+      transform: translateY(-5px);
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">Choose Your Plan</h1>
+      <p class="text-gray-600">Start creating AI-powered marketing campaigns today</p>
+      
+      <!-- User Info (if logged in) -->
+      <div id="userInfo" class="mt-4 hidden">
+        <p class="text-sm text-gray-600">Logged in as: <span id="userName" class="font-semibold"></span></p>
+        <button onclick="logout()" class="text-sm text-red-600 hover:underline">Logout</button>
+      </div>
+      
+      <!-- Login Button (if not logged in) -->
+      <div id="loginPrompt" class="mt-4 hidden">
+        <p class="text-sm text-gray-600">Please <a href="/login" class="text-blue-600 hover:underline">login</a> to subscribe</p>
+      </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="hidden text-center">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <p class="mt-2 text-gray-600">Loading pricing...</p>
+    </div>
+
+    <!-- Subscription Plans -->
+    <div id="subscriptionPlans" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+      <!-- Plans will be loaded here -->
+    </div>
+
+    <!-- Credits Section -->
+    <div class="mt-12">
+      <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Or Purchase Credits</h2>
+      <div id="creditsPackages" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Credits will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Payment Status Messages -->
+    <div id="statusMessage" class="hidden fixed top-4 right-4 p-4 rounded-lg shadow-lg max-w-md"></div>
+  </div>
+
+  <script>
+    // ========================================
+    // CONFIGURATION
+    // ========================================
+    const API_BASE_URL = 'http://localhost:8000';
+    
+    // ========================================
+    // STATE MANAGEMENT
+    // ========================================
+    let currentUser = null;
+    let isProcessing = false;
+
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      loadPricing();
+    });
+
+    // ========================================
+    // AUTH FUNCTIONS
+    // ========================================
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      if (token && user) {
+        currentUser = JSON.parse(user);
+        document.getElementById('userInfo').classList.remove('hidden');
+        document.getElementById('userName').textContent = currentUser.email || currentUser.name;
+        document.getElementById('loginPrompt').classList.add('hidden');
+      } else {
+        document.getElementById('loginPrompt').classList.remove('hidden');
+        document.getElementById('userInfo').classList.add('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.reload();
+    }
+
+    // ========================================
+    // LOAD PRICING DATA
+    // ========================================
+    async function loadPricing() {
+      document.getElementById('loading').classList.remove('hidden');
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/pricing`);
+        const data = await response.json();
+        
+        displaySubscriptionPlans(data.subscriptions);
+        displayCreditsPackages(data.credits);
+        
+      } catch (error) {
+        console.error('Error loading pricing:', error);
+        showMessage('Failed to load pricing. Please refresh the page.', 'error');
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+
+    // ========================================
+    // DISPLAY SUBSCRIPTION PLANS
+    // ========================================
+    function displaySubscriptionPlans(plans) {
+      const container = document.getElementById('subscriptionPlans');
+      container.innerHTML = '';
+      
+      plans.forEach(plan => {
+        const isPopular = plan.tier === 'professional';
+        
+        const planHTML = `
+          <div class="pricing-card bg-white rounded-lg shadow-lg p-6 ${isPopular ? 'ring-2 ring-blue-500' : ''}">
+            ${isPopular ? '<div class="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full inline-block mb-2">POPULAR</div>' : ''}
+            
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">${plan.name}</h3>
+            <div class="text-4xl font-bold text-blue-600 mb-4">
+              ${plan.price_display}
+            </div>
+            
+            <ul class="space-y-2 mb-6">
+              ${plan.features.map(feature => `
+                <li class="flex items-start">
+                  <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="text-sm text-gray-600">${feature}</span>
+                </li>
+              `).join('')}
+            </ul>
+            
+            ${plan.tier !== 'free' ? `
+              <button 
+                onclick="subscribe('${plan.tier}')" 
+                class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+              >
+                Subscribe Now
+              </button>
+            ` : `
+              <button class="w-full bg-gray-300 text-gray-600 py-3 rounded-lg cursor-not-allowed" disabled>
+                Current Plan
+              </button>
+            `}
+          </div>
+        `;
+        
+        container.innerHTML += planHTML;
+      });
+    }
+
+    // ========================================
+    // DISPLAY CREDITS PACKAGES
+    // ========================================
+    function displayCreditsPackages(packages) {
+      const container = document.getElementById('creditsPackages');
+      container.innerHTML = '';
+      
+      packages.forEach(pkg => {
+        const packageHTML = `
+          <div class="bg-white rounded-lg shadow p-4 text-center">
+            <div class="text-2xl font-bold text-gray-800 mb-2">${pkg.credits} Credits</div>
+            <div class="text-xl font-bold text-blue-600 mb-2">${pkg.price_display}</div>
+            ${pkg.discount_percent > 0 ? `
+              <div class="text-xs text-green-600 font-semibold mb-3">Save ${pkg.discount_percent}%</div>
+            ` : '<div class="mb-3"></div>'}
+            <button 
+              onclick="buyCredits(${pkg.credits})" 
+              class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition text-sm font-semibold"
+            >
+              Buy Now
+            </button>
+          </div>
+        `;
+        
+        container.innerHTML += packageHTML;
+      });
+    }
+
+    // ========================================
+    // SUBSCRIPTION PAYMENT
+    // ========================================
+    async function subscribe(tier) {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        showMessage('Please login first to subscribe', 'error');
+        return;
+      }
+      
+      if (isProcessing) return;
+      isProcessing = true;
+      
+      try {
+        showMessage('Creating order...', 'info');
+        
+        // Step 1: Create order on backend
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/create-subscription-order`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ tier: tier })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to create order');
+        }
+
+        const order = data.order;
+
+        // Step 2: Open Razorpay Checkout
+        const options = {
+          key: order.key_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'AdTargetAI',
+          description: `${tier} Subscription`,
+          order_id: order.order_id,
+          prefill: {
+            name: order.user_name,
+            email: order.user_email
+          },
+          theme: {
+            color: '#3399cc'
+          },
+          handler: async function (razorpayResponse) {
+            // Step 3: Verify payment on backend
+            await verifySubscriptionPayment(razorpayResponse);
+          },
+          modal: {
+            ondismiss: function() {
+              isProcessing = false;
+              showMessage('Payment cancelled', 'warning');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+      } catch (error) {
+        console.error('Error:', error);
+        showMessage('Failed to initiate payment: ' + error.message, 'error');
+        isProcessing = false;
+      }
+    }
+
+    // ========================================
+    // CREDITS PAYMENT
+    // ========================================
+    async function buyCredits(credits) {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        showMessage('Please login first to buy credits', 'error');
+        return;
+      }
+      
+      if (isProcessing) return;
+      isProcessing = true;
+      
+      try {
+        showMessage('Creating order...', 'info');
+        
+        // Step 1: Create order
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/create-credits-order`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ credits: credits })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'Failed to create order');
+        }
+
+        const order = data.order;
+
+        // Step 2: Open Razorpay
+        const options = {
+          key: order.key_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'AdTargetAI',
+          description: `${credits} Campaign Credits`,
+          order_id: order.order_id,
+          prefill: {
+            name: order.user_name,
+            email: order.user_email
+          },
+          theme: {
+            color: '#3399cc'
+          },
+          handler: async function (razorpayResponse) {
+            // Step 3: Verify payment
+            await verifyCreditsPayment(razorpayResponse);
+          },
+          modal: {
+            ondismiss: function() {
+              isProcessing = false;
+              showMessage('Payment cancelled', 'warning');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+      } catch (error) {
+        console.error('Error:', error);
+        showMessage('Failed to initiate payment: ' + error.message, 'error');
+        isProcessing = false;
+      }
+    }
+
+    // ========================================
+    // PAYMENT VERIFICATION
+    // ========================================
+    async function verifySubscriptionPayment(razorpayResponse) {
+      const token = localStorage.getItem('token');
+      
+      try {
+        showMessage('Verifying payment...', 'info');
+        
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/verify-subscription-payment`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage('Payment successful! Subscription activated.', 'success');
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showMessage('Payment verification failed: ' + data.detail, 'error');
+        }
+
+      } catch (error) {
+        console.error('Verification error:', error);
+        showMessage('Payment verification failed', 'error');
+      } finally {
+        isProcessing = false;
+      }
+    }
+
+    async function verifyCreditsPayment(razorpayResponse) {
+      const token = localStorage.getItem('token');
+      
+      try {
+        showMessage('Verifying payment...', 'info');
+        
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/verify-credits-payment`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            razorpay_order_id: razorpayResponse.razorpay_order_id,
+            razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+            razorpay_signature: razorpayResponse.razorpay_signature
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          showMessage(`Payment successful! ${data.credits} credits added.`, 'success');
+          setTimeout(() => window.location.reload(), 2000);
+        } else {
+          showMessage('Payment verification failed: ' + data.detail, 'error');
+        }
+
+      } catch (error) {
+        console.error('Verification error:', error);
+        showMessage('Payment verification failed', 'error');
+      } finally {
+        isProcessing = false;
+      }
+    }
+
+    // ========================================
+    // UI HELPERS
+    // ========================================
+    function showMessage(message, type = 'info') {
+      const statusEl = document.getElementById('statusMessage');
+      
+      const colors = {
+        success: 'bg-green-500 text-white',
+        error: 'bg-red-500 text-white',
+        warning: 'bg-yellow-500 text-white',
+        info: 'bg-blue-500 text-white'
+      };
+      
+      statusEl.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg max-w-md ${colors[type]}`;
+      statusEl.textContent = message;
+      statusEl.classList.remove('hidden');
+      
+      setTimeout(() => {
+        statusEl.classList.add('hidden');
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

@@ -275,3 +275,31 @@ async def get_campaign_export_status(session: AsyncSession, campaign_slug: str) 
         }
     
     return status_info
+
+async def update_platform_feed_export_status(
+    session: AsyncSession,
+    platform_feed_id: int,
+    status: str,
+    export_details: Dict[str, Any],
+    exported_ids: Dict[str, Any],
+    error_message: Optional[str] = None
+):
+    """Update platform feed export status after export attempt"""
+    try:
+        stmt = (
+            update(PlatformFeed)
+            .where(PlatformFeed.id == platform_feed_id)
+            .values(
+                export_status=status,
+                export_details=export_details,
+                exported_ids=exported_ids,
+                last_export_attempt=datetime.utcnow(),
+                error_message=error_message
+            )
+        )
+        await session.execute(stmt)
+        await session.flush()
+        
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to update platform feed status: {e}")
+        raise Exception(f"Failed to update export status: {str(e)}")

@@ -18,3 +18,9 @@ AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, clas
 async def get_async_session():
     async with AsyncSessionLocal() as session:
         yield session
+
+async def init_db():
+    """Initialize database tables"""
+    async with engine.begin() as conn:
+        from app.db.models.payment import User, Payment, ConnectedAdAccount
+        await conn.run_sync(Base.metadata.create_all)
