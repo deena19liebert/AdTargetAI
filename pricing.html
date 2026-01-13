@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pricing - AdTargetAI | Professional Marketing Campaigns</title>
+  
+  <!-- Razorpay Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .pricing-card {
+      transition: all 0.3s ease;
+    }
+    
+    .pricing-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .recommended-badge {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      max-width: 400px;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      z-index: 9999;
+      backdrop-filter: blur(10px);
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    .toast.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
+    .toast.error { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+    .toast.info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 min-h-screen">
+  
+  <!-- Header -->
+  <header class="gradient-bg text-white py-6 shadow-2xl">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-bolt text-3xl"></i>
+          <div>
+            <h1 class="text-3xl font-bold">AdTargetAI</h1>
+            <p class="text-sm opacity-90">Pricing & Plans</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+          <!-- Current Balance (if logged in) -->
+          <div id="currentBalance" class="hidden px-5 py-2.5 bg-white/25 backdrop-blur-sm rounded-xl flex items-center space-x-3 border border-white/30 shadow-lg">
+            <i class="fas fa-coins text-yellow-300 text-xl"></i>
+            <div class="flex flex-col">
+              <span id="balanceAmount" class="font-bold text-xl">--</span>
+              <span class="text-xs opacity-75">current credits</span>
+            </div>
+          </div>
+          
+          <button onclick="window.location.href='/'" class="px-6 py-2.5 bg-white/20 backdrop-blur-sm rounded-xl hover:bg-white/30 transition-all font-semibold shadow-lg border border-white/30">
+            <i class="fas fa-arrow-left mr-2"></i>Back to App
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 py-12">
+    
+    <!-- Hero Section -->
+    <div class="text-center mb-12 fade-in">
+      <h2 class="text-5xl font-bold text-gray-800 mb-4">Simple, Transparent Pricing</h2>
+      <p class="text-xl text-gray-600 mb-6">Choose the plan that works best for you</p>
+      
+      <!-- User Status -->
+      <div id="userStatus" class="hidden mt-6 inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-full border border-indigo-200">
+        <i class="fas fa-user-circle text-indigo-600 mr-3 text-xl"></i>
+        <span class="text-gray-700">Logged in as <span id="userName" class="font-semibold text-indigo-600"></span></span>
+      </div>
+      
+      <div id="guestStatus" class="hidden mt-6">
+        <p class="text-gray-600 text-sm">
+          <i class="fas fa-info-circle mr-2 text-indigo-500"></i>
+          Please <a href="/" class="text-indigo-600 font-semibold hover:underline">sign in</a> to purchase credits or subscribe
+        </p>
+      </div>
+    </div>
+    
+    <!-- Loading State -->
+    <div id="loading" class="hidden text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-indigo-600 border-t-transparent"></div>
+      <p class="mt-4 text-gray-600 font-semibold">Loading pricing plans...</p>
+    </div>
+    
+    <!-- Credit Packages Section -->
+    <div id="creditsSection" class="mb-16">
+      <div class="text-center mb-8">
+        <h3 class="text-3xl font-bold text-gray-800 mb-2">💎 Purchase Credits</h3>
+        <p class="text-gray-600">One-time purchases • Use anytime • No expiry</p>
+      </div>
+      
+      <div id="creditsPackages" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <!-- Credit packages will be loaded here -->
+      </div>
+      
+      <div class="text-center mt-8">
+        <p class="text-sm text-gray-500">
+          <i class="fas fa-info-circle mr-2"></i>
+          Credits never expire • Use across all platforms • Instant activation
+        </p>
+      </div>
+    </div>
+    
+    <!-- Subscription Plans Section -->
+    <div id="subscriptionsSection" class="mb-16">
+      <div class="text-center mb-8">
+        <h3 class="text-3xl font-bold text-gray-800 mb-2">🚀 Monthly Subscriptions</h3>
+        <p class="text-gray-600">Recurring plans with bonus credits and exclusive features</p>
+      </div>
+      
+      <div id="subscriptionPlans" class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Subscription plans will be loaded here -->
+      </div>
+    </div>
+    
+    <!-- Features Comparison -->
+    <div class="mt-16 max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+      <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">What's Included</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="flex items-start">
+          <i class="fas fa-check-circle text-green-500 text-2xl mr-4 mt-1"></i>
+          <div>
+            <h4 class="font-semibold text-gray-800">AI-Powered Campaigns</h4>
+            <p class="text-sm text-gray-600">Generate professional campaigns with GPT-4</p>
+          </div>
+        </div>
+        <div class="flex items-start">
+          <i class="fas fa-check-circle text-green-500 text-2xl mr-4 mt-1"></i>
+          <div>
+            <h4 class="font-semibold text-gray-800">Multi-Platform Support</h4>
+            <p class="text-sm text-gray-600">Facebook, Instagram, Google Ads, LinkedIn & more</p>
+          </div>
+        </div>
+        <div class="flex items-start">
+          <i class="fas fa-check-circle text-green-500 text-2xl mr-4 mt-1"></i>
+          <div>
+            <h4 class="font-semibold text-gray-800">Advanced Targeting</h4>
+            <p class="text-sm text-gray-600">Precise audience targeting with AI insights</p>
+          </div>
+        </div>
+        <div class="flex items-start">
+          <i class="fas fa-check-circle text-green-500 text-2xl mr-4 mt-1"></i>
+          <div>
+            <h4 class="font-semibold text-gray-800">Performance Analytics</h4>
+            <p class="text-sm text-gray-600">Track campaign performance in real-time</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- Footer -->
+  <footer class="bg-gray-900 text-white py-8 mt-16">
+    <div class="container mx-auto px-4 text-center">
+      <p class="text-gray-400">© 2026 AdTargetAI. All rights reserved.</p>
+      <p class="text-sm text-gray-500 mt-2">Powered by AI • Secured by Razorpay</p>
+    </div>
+  </footer>
+  
+  <script>
+    // ========================================
+    // CONFIGURATION
+    // ========================================
+    const API_BASE_URL = window.location.origin;
+    
+    // ========================================
+    // FALLBACK PRICING DATA (if API fails)
+    // ========================================
+    const FALLBACK_PRICING = {
+      credits: [
+        {
+          credits: 50,
+          price_paise: 2900,
+          original_price_paise: 2900,
+          discount_percent: 0,
+          price_display: "₹29"
+        },
+        {
+          credits: 110,
+          price_paise: 4900,
+          original_price_paise: 5500,
+          discount_percent: 10,
+          price_display: "₹49"
+        },
+        {
+          credits: 300,
+          price_paise: 9900,
+          original_price_paise: 12000,
+          discount_percent: 15,
+          price_display: "₹99"
+        },
+        {
+          credits: 600,
+          price_paise: 19900,
+          original_price_paise: 25000,
+          discount_percent: 20,
+          price_display: "₹199"
+        }
+      ],
+      subscriptions: [
+        {
+          tier: "free",
+          name: "Free Plan",
+          price_paise: 0,
+          bonus_credits: 0,
+          features: [
+            "20 free credits to start",
+            "Basic campaign generation",
+            "Standard support",
+            "Community access"
+          ]
+        },
+        {
+          tier: "starter",
+          name: "For Growing Businesses",
+          price_paise: 49900,
+          bonus_credits: 50,
+          features: [
+            "50 bonus credits/month",
+            "Advanced targeting",
+            "Priority support",
+            "Analytics dashboard",
+            "Multi-platform campaigns"
+          ]
+        },
+        {
+          tier: "professional",
+          name: "For Marketing Teams",
+          price_paise: 99900,
+          bonus_credits: 100,
+          features: [
+            "100 bonus credits/month",
+            "Advanced AI features",
+            "24/7 premium support",
+            "Custom integrations",
+            "Team collaboration",
+            "White-label options"
+          ]
+        }
+      ]
+    };
+    
+    // ========================================
+    // STATE MANAGEMENT
+    // ========================================
+    let currentUser = null;
+    let isProcessing = false;
+    let pricingData = null;
+    
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🚀 Pricing page loaded');
+      checkAuth();
+      loadPricing();
+    });
+    
+    // ========================================
+    // AUTH FUNCTIONS
+    // ========================================
+    function checkAuth() {
+      const token = localStorage.getItem('token');
+      const userEmail = localStorage.getItem('userEmail');
+      const userName = localStorage.getItem('userName');
+      
+      console.log('🔐 Checking auth:', { hasToken: !!token, email: userEmail });
+      
+      if (token) {
+        // User is logged in
+        currentUser = { email: userEmail, name: userName };
+        document.getElementById('userStatus').classList.remove('hidden');
+        document.getElementById('guestStatus').classList.add('hidden');
+        
+        const displayName = userName ? userName.split(' ')[0] : (userEmail ? userEmail.split('@')[0] : 'User');
+        document.getElementById('userName').textContent = displayName;
+        
+        // Load current balance
+        loadCurrentBalance();
+      } else {
+        // User is not logged in
+        document.getElementById('guestStatus').classList.remove('hidden');
+        document.getElementById('userStatus').classList.add('hidden');
+        console.log('⚠️ User not logged in');
+      }
+    }
+    
+    async function loadCurrentBalance() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/balance`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('balanceAmount').textContent = data.credits_balance || 0;
+          document.getElementById('currentBalance').classList.remove('hidden');
+          console.log('💰 Balance loaded:', data.credits_balance);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load balance:', error);
+      }
+    }
+    
+    // ========================================
+    // PRICING DATA LOADING
+    // ========================================
+    async function loadPricing() {
+      document.getElementById('loading').classList.remove('hidden');
+      console.log('📊 Loading pricing data...');
+      
+      try {
+        const token = localStorage.getItem('token');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+        
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/pricing`, {
+          headers: headers
+        });
+        
+        if (response.ok) {
+          pricingData = await response.json();
+          console.log('✅ API pricing loaded:', pricingData);
+        } else {
+          console.warn('⚠️ API failed, using fallback pricing');
+          pricingData = {
+            credit_packages: FALLBACK_PRICING.credits,
+            subscription_plans: FALLBACK_PRICING.subscriptions
+          };
+        }
+      } catch (error) {
+        console.error('❌ API error, using fallback pricing:', error);
+        pricingData = {
+          credit_packages: FALLBACK_PRICING.credits,
+          subscription_plans: FALLBACK_PRICING.subscriptions
+        };
+      } finally {
+        // Always render something
+        renderCreditPackages(pricingData.credit_packages || []);
+        renderSubscriptionPlans(pricingData.subscription_plans || []);
+        document.getElementById('loading').classList.add('hidden');
+        console.log('✅ Pricing rendered');
+      }
+    }
+    
+    // ========================================
+    // RENDER FUNCTIONS
+    // ========================================
+    function renderCreditPackages(packages) {
+      const container = document.getElementById('creditsPackages');
+      container.innerHTML = '';
+      
+      console.log('💎 Rendering', packages.length, 'credit packages');
+      
+      if (packages.length === 0) {
+        container.innerHTML = '<p class="text-gray-600 col-span-4 text-center">No credit packages available</p>';
+        return;
+      }
+      
+      packages.forEach((pkg, index) => {
+        const isPopular = index === 1; // Mark second package as popular
+        
+        const card = document.createElement('div');
+        card.className = `pricing-card bg-white rounded-2xl p-6 border-2 ${isPopular ? 'border-indigo-500 shadow-2xl' : 'border-gray-200 shadow-lg'} relative fade-in`;
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        card.innerHTML = `
+          ${isPopular ? `<div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <span class="recommended-badge px-4 py-1 rounded-full text-xs font-bold text-white shadow-lg">
+              POPULAR
+            </span>
+          </div>` : ''}
+          
+          <div class="text-center mb-6">
+            <div class="text-5xl mb-3">${getPackageIcon(pkg.credits)}</div>
+            <h4 class="text-2xl font-bold text-gray-800">${pkg.credits} Credits</h4>
+            ${pkg.discount_percent > 0 ? `
+              <p class="text-sm text-green-600 font-semibold mt-1">
+                <i class="fas fa-tag mr-1"></i>Save ${pkg.discount_percent}%
+              </p>
+            ` : ''}
+          </div>
+          
+          <div class="text-center mb-6">
+            <div class="text-4xl font-bold text-gray-800">
+              ₹${Math.floor(pkg.price_paise / 100)}
+            </div>
+            ${pkg.original_price_paise > pkg.price_paise ? `
+              <div class="text-sm text-gray-500 line-through mt-1">
+                ₹${Math.floor(pkg.original_price_paise / 100)}
+              </div>
+            ` : ''}
+            <p class="text-sm text-gray-600 mt-2">₹${(pkg.price_paise / pkg.credits / 100).toFixed(2)} per credit</p>
+          </div>
+          
+          <button 
+            onclick="purchaseCredits(${pkg.credits})"
+            class="w-full ${isPopular ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700' : 'bg-gray-800 hover:bg-gray-900'} text-white py-3 rounded-xl font-semibold hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <i class="fas fa-shopping-cart mr-2"></i>Purchase Now
+          </button>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    function renderSubscriptionPlans(plans) {
+      const container = document.getElementById('subscriptionPlans');
+      container.innerHTML = '';
+      
+      console.log('🚀 Rendering', plans.length, 'subscription plans');
+      
+      if (plans.length === 0) {
+        container.innerHTML = '<p class="text-gray-600 col-span-3 text-center">No subscription plans available</p>';
+        return;
+      }
+      
+      plans.forEach((plan, index) => {
+        // Skip free plan
+        if (plan.tier === 'free') return;
+        
+        const isPopular = plan.tier === 'starter';
+        
+        const card = document.createElement('div');
+        card.className = `pricing-card bg-white rounded-2xl p-8 border-2 ${isPopular ? 'border-indigo-500 shadow-2xl scale-105' : 'border-gray-200 shadow-lg'} relative fade-in`;
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        card.innerHTML = `
+          ${isPopular ? `<div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+            <span class="recommended-badge px-4 py-1 rounded-full text-xs font-bold text-white shadow-lg">
+              <i class="fas fa-star mr-1"></i>RECOMMENDED
+            </span>
+          </div>` : ''}
+          
+          <div class="text-center mb-6">
+            <h4 class="text-2xl font-bold text-gray-800 uppercase tracking-wide">${plan.tier}</h4>
+            <p class="text-gray-600 text-sm mt-2">${plan.name}</p>
+          </div>
+          
+          <div class="text-center mb-6">
+            <div class="text-5xl font-bold text-gray-800">
+              ₹${Math.floor(plan.price_paise / 100)}
+            </div>
+            <p class="text-sm text-gray-600 mt-2">per month</p>
+            ${plan.bonus_credits > 0 ? `
+              <div class="mt-4 inline-flex items-center px-4 py-2 bg-green-50 rounded-full border border-green-200">
+                <i class="fas fa-gift text-green-600 mr-2"></i>
+                <span class="text-sm font-semibold text-green-700">+${plan.bonus_credits} bonus credits</span>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="space-y-3 mb-6">
+            ${plan.features.map(feature => `
+              <div class="flex items-start">
+                <i class="fas fa-check-circle text-green-500 mr-3 mt-1 flex-shrink-0"></i>
+                <span class="text-gray-700 text-sm">${feature}</span>
+              </div>
+            `).join('')}
+          </div>
+          
+          <button 
+            onclick="subscribe('${plan.tier}')"
+            class="w-full ${isPopular ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700' : 'bg-gray-800 hover:bg-gray-900'} text-white py-4 rounded-xl font-semibold hover:shadow-xl transition-all transform hover:-translate-y-1"
+          >
+            <i class="fas fa-crown mr-2"></i>Subscribe Now
+          </button>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+    
+    function getPackageIcon(credits) {
+      if (credits <= 50) return '💎';
+      if (credits <= 100) return '💰';
+      if (credits <= 300) return '🎁';
+      return '🏆';
+    }
+    
+    // ========================================
+    // PURCHASE FUNCTIONS (REAL BACKEND)
+    // ========================================
+    async function purchaseCredits(credits) {
+      console.log('💳 REAL BACKEND - Purchase credits:', credits);
+      
+      if (!currentUser) {
+        showToast('Please sign in to purchase credits', 'error');
+        setTimeout(() => window.location.href = '/', 1500);
+        return;
+      }
+      
+      if (isProcessing) return;
+      isProcessing = true;
+      
+      showToast(`Processing purchase of ${credits} credits...`, 'info');
+      
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE_URL}/api/v1/payments/purchase-credits`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ credits: credits })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+          console.log('✅ Real purchase successful:', data);
+          showToast(`✅ Success! ${data.credits_added} credits added. New balance: ${data.new_balance}`, 'success');
+          
+          // Update balance in UI
+          const balanceEl = document.getElementById('balanceAmount');
+          if (balanceEl) {
+            balanceEl.textContent = data.new_balance;
+          }
+          
+          // Redirect back to main page after success
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000);
+        } else {
+          throw new Error(data.detail || data.message || 'Purchase failed');
+        }
+        
+      } catch (error) {
+        console.error('❌ Real purchase error:', error);
+        showToast(`Purchase failed: ${error.message}`, 'error');
+      } finally {
+        isProcessing = false;
+      }
+    }
+    
+    async function subscribe(tier) {
+      console.log('🚀 DEMO VERSION - Subscribe to:', tier);
+      
+      if (!currentUser) {
+        showToast('Please sign in to subscribe', 'error');
+        setTimeout(() => window.location.href = '/', 1500);
+        return;
+      }
+      
+      // DEMO: Skip API calls and show modal directly
+      showToast('Demo mode: Showing subscription modal', 'info');
+      
+      // Find the plan details
+      const plan = pricingData.subscription_plans?.find(p => p.tier === tier);
+      const price = plan ? Math.floor(plan.price_paise / 100) : 99;
+      const planName = plan ? plan.name : tier;
+      const bonusCredits = plan ? plan.bonus_credits : 0;
+      
+      // Show demo subscription modal immediately
+      showDemoPurchaseModal({
+        type: 'subscription',
+        tier: tier,
+        price: price,
+        title: `Subscribe to ${planName}`,
+        description: `₹${price}/month + ${bonusCredits} bonus credits`
+      });
+    }
+    
+    // Show demo purchase modal
+    function showDemoPurchaseModal(details) {
+      const modal = document.createElement('div');
+      modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+      modal.innerHTML = `
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i class="fas fa-shopping-cart text-indigo-600 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-2">${details.title}</h3>
+            <p class="text-gray-600">${details.description}</p>
+          </div>
+          
+          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 mb-6">
+            <h4 class="font-bold text-gray-800 mb-4">Demo Payment Options</h4>
+            <div class="space-y-3">
+              <button onclick="simulateSuccessfulPayment('${details.type}', ${details.credits || 0}, '${details.tier || ''}')" class="w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition">
+                <i class="fas fa-check-circle mr-2"></i>Demo: Payment Success
+              </button>
+              <button onclick="simulateFailedPayment()" class="w-full bg-red-500 text-white py-3 rounded-lg font-semibold hover:bg-red-600 transition">
+                <i class="fas fa-times-circle mr-2"></i>Demo: Payment Failed
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-4 text-center">
+              <i class="fas fa-info-circle mr-1"></i>
+              This is a demo. In production, integrate with Razorpay.
+            </p>
+          </div>
+          
+          <button onclick="closeDemoModal()" class="w-full bg-gray-200 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+            Cancel
+          </button>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+    
+    // Simulate successful payment
+    async function simulateSuccessfulPayment(type, credits, tier) {
+      closeDemoModal();
+      
+      showToast('Processing payment...', 'info');
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      if (type === 'credits') {
+        showToast(`✅ Success! ${credits} credits added to your account`, 'success');
+        // Update balance in UI (demo)
+        const balanceEl = document.getElementById('balanceAmount');
+        if (balanceEl) {
+          const currentBalance = parseInt(balanceEl.textContent) || 0;
+          balanceEl.textContent = currentBalance + credits;
+        }
+      } else {
+        showToast(`✅ Success! Subscribed to ${tier} plan`, 'success');
+      }
+      
+      // Redirect back to main page after success
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+    
+    // Simulate failed payment
+    function simulateFailedPayment() {
+      closeDemoModal();
+      showToast('❌ Payment failed. Please try again.', 'error');
+    }
+    
+    // Close demo modal
+    function closeDemoModal() {
+      const modal = document.querySelector('.fixed.inset-0');
+      if (modal) modal.remove();
+    }
+    
+    // Make functions globally accessible
+    window.simulateSuccessfulPayment = simulateSuccessfulPayment;
+    window.simulateFailedPayment = simulateFailedPayment;
+    window.closeDemoModal = closeDemoModal;
+    
+    // ========================================
+    // TOAST NOTIFICATIONS
+    // ========================================
+    function showToast(message, type = 'info') {
+      console.log(`📢 Toast (${type}):`, message);
+      
+      const existingToasts = document.querySelectorAll('.toast');
+      existingToasts.forEach(toast => toast.remove());
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      const icons = {
+        success: 'fa-check-circle',
+        error: 'fa-exclamation-circle',
+        info: 'fa-info-circle'
+      };
+      
+      toast.innerHTML = `
+        <div class="flex items-center">
+          <i class="fas ${icons[type]} text-2xl mr-3"></i>
+          <p class="font-semibold">${message}</p>
+        </div>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
