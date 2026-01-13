@@ -1,0 +1,16 @@
+# Ignore Python backend
+app/
+*.py
+requirements.txt
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+venv/
+env/
+
+# Keep only frontend
+!index.html
+!pricing.html
+!vercel.json
