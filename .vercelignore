@@ -10,7 +10,6 @@ __pycache__/
 venv/
 env/
 
-# Keep only frontend
-!index.html
-!pricing.html
-!vercel.json
+# Ignore git
+.git/
+.gitignore

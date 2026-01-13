@@ -1,14 +1,5 @@
 {
   "version": 2,
-  "name": "adtargetai",
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/templates/index.html"
-    },
-    {
-      "source": "/pricing",
-      "destination": "/templates/pricing.html"
-    }
-  ]
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": "templates"
 }
