@@ -1,9 +1,14 @@
 {
   "version": 2,
-  "builds": [
+  "name": "adtargetai",
+  "rewrites": [
     {
-      "src": "*.html",
-      "use": "@vercel/static"
+      "source": "/",
+      "destination": "/templates/index.html"
+    },
+    {
+      "source": "/pricing",
+      "destination": "/templates/pricing.html"
     }
   ]
 }
